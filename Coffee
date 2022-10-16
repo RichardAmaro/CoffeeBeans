@@ -1,0 +1,142 @@
+# initialize and get inputs
+from matplotlib import pyplot as plt
+from statistics import mean
+from yahoo_fin.stock_info import get_data
+from yahoo_fin.stock_info import get_analysts_info
+Coffee_Frequency = 0
+Coffee_distance = 0
+Coffee_Intake = float(
+    input('How many cups coffee do you drink (buy) every week, on average?'))
+
+while Coffee_Intake < 0:
+    Coffee_Intake = float(input(
+        "You can't have negative coffee! How much coffee do you drink (buy) every week, on average?"))
+
+Coffee_Price = float(
+    input('How much do you spend on a single coffee(in dollars), on average?'))
+
+while Coffee_Price < 0:
+    Coffee_Price = float(input(
+        'You cannot have a price below 0How much do you spend on a single coffee (in dollars), on average?'))
+
+
+Coffee_Travel = int(
+    input('Do you drive to pick up your coffee? (1=yes, 0 otherwise)'))
+if Coffee_Travel == 1:
+    Coffee_Frequency = int(
+        input('How often do you drive to pick up your coffee per week, on average?'))
+    Coffee_Frequency = abs(Coffee_Frequency)
+    Coffee_distance = float(
+        input('On average, how far is the coffee shop, in miles, from you?'))
+    Coffee_distance = abs(Coffee_distance)
+    identifier = 1
+    CarYouDrive = str(input(
+        "What type of car most resembles what you drive? Type TRUCK, SUV, SEDAN, ELECTRIC"))
+    while identifier == 1:
+        if CarYouDrive == "TRUCK":
+            MPG = 16
+            identifier = 0
+        elif CarYouDrive == "SUV":
+            MPG = 19
+            identifier = 0
+        elif CarYouDrive == "SEDAN":
+            MPG = 40
+            identifier = 0
+        elif CarYouDrive == "ELECTRIC":
+            MPG = 1000
+            identifier = 0
+        else:
+            CarYouDrive = str(input(
+                "That's not a valid option. What type of car most resembles what you drive? Type TRUCK, SUV, SEDAN, ELECTRIC"))
+    GallonsWasted = (Coffee_Frequency * Coffee_distance) / MPG
+else:
+    Coffee_Travel = 0
+    MPG = 0
+    GallonsWasted = 0
+
+# let x be the amount of dollars per serving of sustainable coffee, dependent on the sustainable option
+x = .78
+# can be used for figuring out how much money per week someone can save
+
+PrincipalWk = Coffee_Intake*(Coffee_Price-x) + GallonsWasted*3
+# lets integrate some stocks now
+
+Stock = input(
+    'Select a stock ticker, for example, "AMZN" for Amazon')
+
+StockFiveYearsAgo = get_data(
+    Stock, start_date="01/01/2017", end_date="12/31/2017")
+
+Stock2022 = get_data(Stock, start_date="01/01/2022", end_date="10/14/2022")
+
+growthRate = (mean(
+    Stock2022['open']) - mean(StockFiveYearsAgo['open']))/(mean(StockFiveYearsAgo['open'])*5)
+
+iRate = .03
+
+# Initialize MoneyGenerated1Yr
+MoneyGenerated1yrRisky = 0
+MoneyGenerated2yrRisky = 0
+MoneyGenerated3yrRisky = 0
+MoneyGenerated4yrRisky = 0
+MoneyGenerated5yrRisky = 0
+
+Money1yr = 0
+Money2yr = 0
+Money3yr = 0
+Money4yr = 0
+Money5yr = 0
+
+x = [0, 52, 104, 156, 208, 260]
+y = [0, 0, 0, 0, 0, 0]
+for n in range(52):
+    MoneyGenerated1yrRisky = PrincipalWk * \
+        (1+growthRate/52)**(52-n) + MoneyGenerated1yrRisky
+    y[1] = MoneyGenerated1yrRisky
+    Money1yr = PrincipalWk*(1+iRate/52)**(52-n) + Money1yr
+for m in range(104):
+    MoneyGenerated2yrRisky = PrincipalWk * \
+        (1+growthRate/52)**(104-m) + MoneyGenerated2yrRisky
+    y[2] = MoneyGenerated2yrRisky
+    Money2yr = PrincipalWk*(1+iRate/52)**(52-n) + Money2yr
+
+for q in range(156):
+    MoneyGenerated3yrRisky = PrincipalWk * \
+        (1+growthRate/52)**(156-q) + MoneyGenerated3yrRisky
+    y[3] = MoneyGenerated3yrRisky
+    Money3yr = PrincipalWk*(1+iRate/52)**(52-n) + Money3yr
+
+for t in range(208):
+    MoneyGenerated4yrRisky = PrincipalWk * \
+        (1+growthRate/52)**(208-t) + MoneyGenerated4yrRisky
+    y[4] = MoneyGenerated4yrRisky
+    Money4yr = PrincipalWk*(1+iRate/52)**(52-n) + Money4yr
+
+for i in range(260):
+    MoneyGenerated5yrRisky = PrincipalWk * \
+        (1+growthRate/52)**(260-i) + MoneyGenerated5yrRisky
+    y[5] = MoneyGenerated5yrRisky
+    Money5yr = PrincipalWk*(1+iRate/52)**(52-n) + Money5yr
+
+
+plt.xlim(0, 266)
+plt.xlabel('Weeks')
+plt.ylim(0, MoneyGenerated5yrRisky+100)
+plt.ylabel('Dollars')
+plt.title('Earnings over projected stock investment')
+plt.grid()
+plt.plot(x, y, marker="o", markersize=20,
+         markeredgecolor="red", markerfacecolor="brown")
+plt.show()
+
+TreesDonated = Money1yr
+TreesDonated = round(TreesDonated)
+MealsDonated = Money1yr*10
+MealsDonated = round(MealsDonated)
+Dollars1yr = round(MoneyGenerated1yrRisky*100)/100
+print('You could have made $', Dollars1yr,
+      'at the end of 1 year by investing in the risky prospect', Stock)
+print('You could have also planted', TreesDonated,
+      'trees at the end of 1 year without investing in a risky prospect.')
+print('Or you could have donated', MealsDonated,
+      'meals at the end of 1 year without investing in a risky prospect.')
